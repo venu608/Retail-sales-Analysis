@@ -3,10 +3,7 @@
 ## Project Overview
 
 **Project Title**: Retail Sales Analysis  
-**Level**: Beginner  
 **Database**: `p1_retail_db`
-
-This project is designed to demonstrate SQL skills and techniques typically used by data analysts to explore, clean, and analyze retail sales data. The project involves setting up a retail sales database, performing exploratory data analysis (EDA), and answering specific business questions through SQL queries. This project is ideal for those who are starting their journey in data analysis and want to build a solid foundation in SQL.
 
 ## Objectives
 
@@ -70,42 +67,30 @@ WHERE
 
 The following SQL queries were developed to answer specific business questions:
 
-1. **Write a SQL query to retrieve all columns for sales made on '2022-11-05**:
+1. **How many sales we have**:
 ```sql
-SELECT *
-FROM retail_sales
-WHERE sale_date = '2022-11-05';
+select count(*) as total_sales
+from retails_sales;
 ```
 
-2. **Write a SQL query to retrieve all transactions where the category is 'Clothing' and the quantity sold is more than 4 in the month of Nov-2022**:
+2. **How Many Unique Customers we have  ?**:
 ```sql
-SELECT 
-  *
-FROM retail_sales
-WHERE 
-    category = 'Clothing'
-    AND 
-    TO_CHAR(sale_date, 'YYYY-MM') = '2022-11'
-    AND
-    quantity >= 4
+select count(distinct customer_id) as total_customers
+from retails_sales;
 ```
 
-3. **Write a SQL query to calculate the total sales (total_sale) for each category.**:
+3. **How Many Unique caterogys have ?.**:
 ```sql
-SELECT 
-    category,
-    SUM(total_sale) as net_sale,
-    COUNT(*) as total_orders
-FROM retail_sales
-GROUP BY 1
+Select distinct category 
+from retails_sales;
 ```
 
-4. **Write a SQL query to find the average age of customers who purchased items from the 'Beauty' category.**:
+4. **What is the tota_sales and avg per sales Transction.**:
 ```sql
-SELECT
-    ROUND(AVG(age), 2) as avg_age
-FROM retail_sales
-WHERE category = 'Beauty'
+select 
+     sum(total_sale) As total_sales,
+	 round(avg(total_sale), 2) As avg_per_transction
+from retails_sales;
 ```
 
 5. **Write a SQL query to find all transactions where the total_sale is greater than 1000.**:
@@ -114,79 +99,141 @@ SELECT * FROM retail_sales
 WHERE total_sale > 1000
 ```
 
-6. **Write a SQL query to find the total number of transactions (transaction_id) made by each gender in each category.**:
+6. **what is avg of customers .**:
 ```sql
-SELECT 
-    category,
-    gender,
-    COUNT(*) as total_trans
-FROM retail_sales
-GROUP 
-    BY 
-    category,
-    gender
-ORDER BY 1
+Select AVG(age) As avg_Customer
+from retails_sales;
 ```
 
-7. **Write a SQL query to calculate the average sale for each month. Find out best selling month in each year**:
+7. **Genders to total_sales**:
 ```sql
-SELECT 
-       year,
-       month,
-    avg_sale
-FROM 
-(    
-SELECT 
-    EXTRACT(YEAR FROM sale_date) as year,
-    EXTRACT(MONTH FROM sale_date) as month,
-    AVG(total_sale) as avg_sale,
-    RANK() OVER(PARTITION BY EXTRACT(YEAR FROM sale_date) ORDER BY AVG(total_sale) DESC) as rank
-FROM retail_sales
-GROUP BY 1, 2
-) as t1
-WHERE rank = 1
+select gender,
+sum(total_sale) As total_sales
+from retails_sales
+Group by gender ;
 ```
 
-8. **Write a SQL query to find the top 5 customers based on the highest total sales **:
+8. **which gender contribute more to total_sales **:
 ```sql
-SELECT 
-    customer_id,
-    SUM(total_sale) as total_sales
-FROM retail_sales
-GROUP BY 1
-ORDER BY 2 DESC
-LIMIT 5
+Select 
+      gender,
+      count(*) as number_of_transactions,
+	  sum(total_sale) as total_sales,
+	  round(sum(total_sale)*100.0/(select sum(total_sale) from retails_sales),2)as Sales_percentage
+from retails_sales
+group by gender
+order by total_sales DESC;
 ```
 
-9. **Write a SQL query to find the number of unique customers who purchased items from each category.**:
+9. ** sales By Day .**:
 ```sql
-SELECT 
-    category,    
-    COUNT(DISTINCT customer_id) as cnt_unique_cs
-FROM retail_sales
-GROUP BY category
+select 
+      sale_date,
+	  sum(total_sale) as Day_total_sale
+from retails_sales
+group by sale_date
+order by sale_date Desc
+limit 5;
+```
+10. ** sales By Month  .**:
+```sql
+select 
+      Month(sale_date)As Month,
+	  sum(total_sale) as Month_total_sale
+from retails_sales
+group by Month(sale_date)
+order by Month Desc
+limit 5;
 ```
 
-10. **Write a SQL query to create each shift and number of orders (Example Morning <12, Afternoon Between 12 & 17, Evening >17)**:
+11. ** Sales By Category  .**:
 ```sql
-WITH hourly_sale
-AS
-(
-SELECT *,
-    CASE
-        WHEN EXTRACT(HOUR FROM sale_time) < 12 THEN 'Morning'
-        WHEN EXTRACT(HOUR FROM sale_time) BETWEEN 12 AND 17 THEN 'Afternoon'
-        ELSE 'Evening'
-    END as shift
-FROM retail_sales
+select * from retails_sales;
+select 
+      category,
+      sum(total_sale) as total_sales,
+      sum(quantiy) as total_quantiy
+from retails_sales
+group by category 
+order by total_sales Desc;
+```
+
+12. ** total Profit ( Revenue)  .**:
+```sql
+select
+      sum(total_sale) as total_profit
+from retails_sales;
+```
+
+13. ** sales by Age Group  .**:
+```sql
+Select
+ case 
+  when age <20 Then 'under 20'
+  when age between 20 AND 29 Then '20s'
+  when age between 29 AND 39 Then '30s'
+  when age between 39 AND 49 Then '40s'
+  Else '50s'
+END as age_group,
+count(*) as transactions,
+sum(total_sale) as total_sales 
+from retails_sales 
+group by age_group
+order by total_sales Desc;
+```
+
+14. **sales by shift (Example Morning <12, Afternoon Between 12 & 17, Evening >17)**:
+```sql
+with shiftData as(
+select*,
+case
+    when hour(sale_time) <12 Then 'Morning'
+    when hour(sale_time) between 12 AND 17 Then 'Afternoon'
+    Else 'Evening'
+    End as Shift
+    from retails_sales
 )
-SELECT 
-    shift,
-    COUNT(*) as total_orders    
-FROM hourly_sale
-GROUP BY shift
+select 
+ shift,
+ count(*) as transactions,
+ sum(total_sale) as total_sales
+from shiftData
+group by shift;
 ```
 
+15. **what is the total cost of Goods sold (cogs)**:
+```sql
+select 
+round(sum(cogs),2) as total_cogs
+from retails_sales;
+```
+16. ** what is the total profit (total_sales -cogs)**:
+```sql
+select 
+round(sum(total_sale - cogs),2) as total_profit
+from retails_sales;
+```
+
+
+17. **Which categories  Are Most sold by Quantity and by revenue**:
+```sql
+select	 
+    category,
+    sum(quantiy) as total_quantity_sold,
+    sum(total_sale) as total_Revenue
+    from retails_sales
+    group by category
+    order by total_quantity_sold DESC, total_Revenue DESC;
+```
+18. **what is the average price per unit for each category**:
+```sql
+select 
+      category,
+      round(AVG(price_per_unit),2) as avg_price_per_unit
+      from retails_sales
+      group by category
+      order by avg_price_per_unit DESC;
+```
 ## Findings
 
 - **Customer Demographics**: The dataset includes customers from various age groups, with sales distributed across different categories such as Clothing and Beauty.
@@ -204,24 +251,4 @@ GROUP BY shift
 
 This project serves as a comprehensive introduction to SQL for data analysts, covering database setup, data cleaning, exploratory data analysis, and business-driven SQL queries. The findings from this project can help drive business decisions by understanding sales patterns, customer behavior, and product performance.
 
-## How to Use
 
-1. **Clone the Repository**: Clone this project repository from GitHub.
-2. **Set Up the Database**: Run the SQL scripts provided in the `database_setup.sql` file to create and populate the database.
-3. **Run the Queries**: Use the SQL queries provided in the `analysis_queries.sql` file to perform your analysis.
-4. **Explore and Modify**: Feel free to modify the queries to explore different aspects of the dataset or answer additional business questions.
-
-## Author - Zero Analyst
-
-This project is part of my portfolio, showcasing the SQL skills essential for data analyst roles. If you have any questions, feedback, or would like to collaborate, feel free to get in touch!
-
-### Stay Updated and Join the Community
-
-For more content on SQL, data analysis, and other data-related topics, make sure to follow me on social media and join our community:
-
-- **YouTube**: [Subscribe to my channel for tutorials and insights](https://www.youtube.com/@zero_analyst)
-- **Instagram**: [Follow me for daily tips and updates](https://www.instagram.com/zero_analyst/)
-- **LinkedIn**: [Connect with me professionally](https://www.linkedin.com/in/najirr)
-- **Discord**: [Join our community to learn and grow together](https://discord.gg/36h5f2Z5PK)
-
-Thank you for your support, and I look forward to connecting with you!
